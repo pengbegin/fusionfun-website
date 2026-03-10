@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FusionFun - AI原生游戏智能协作平台</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: '#FFFDF5',
+                        slate: {
+                            100: '#F1F5F9',
+                            200: '#E2E8F0',
+                            500: '#64748B',
+                            800: '#1E293B',
+                        },
+                        violet: '#8B5CF6',
+                        pink: '#F472B6',
+                        amber: '#FBBF24',
+                        emerald: '#34D399',
+                    },
+                    fontFamily: {
+                        heading: ['Outfit', 'system-ui', 'sans-serif'],
+                        body: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'pop': '4px 4px 0px 0px #1E293B',
+                        'pop-hover': '6px 6px 0px 0px #1E293B',
+                        'pop-active': '2px 2px 0px 0px #1E293B',
+                        'pop-soft': '8px 8px 0px 0px #E2E8F0',
+                        'pop-pink': '8px 8px 0px 0px #F472B6',
+                        'pop-violet': '8px 8px 0px 0px #8B5CF6',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'wiggle': 'wiggle 1s ease-in-out infinite',
+                        'bounce-in': 'bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        'marquee': 'marquee 20s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        },
+                        bounceIn: {
+                            '0%': { transform: 'scale(0)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        marquee: {
+                            '0%': { transform: 'translateX(0%)' },
+                            '100%': { transform: 'translateX(-50%)' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <style>
+        /* Base Styles */
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background-color: #FFFDF5;
+            color: #1E293B;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Outfit', system-ui, sans-serif;
+        }
+        
+        /* Dot Pattern Background */
+        .dot-pattern {
+            background-image: radial-gradient(#E2E8F0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        /* Squiggle SVG */
+        .squiggle {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 Q25 0 50 10 T100 10' stroke='%238B5CF6' stroke-width='3' fill='none' opacity='0.3'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+            background-size: 100px 20px;
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-cream text-slate-800 overflow-x-hidden">
+    
+    <!-- Decorative Floating Shapes -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <!-- Large Yellow Circle -->
+        <div class="absolute -top-20 -left-20 w-96 h-96 bg-amber rounded-full opacity-20 blur-sm"></div>
+        <!-- Pink Blob -->
+        <div class="absolute top-1/4 right-0 w-64 h-64 bg-pink rounded-full opacity-15"></div>
+        <!-- Green Triangle -->
+        <div class="absolute bottom-1/4 left-10 w-20 h-20 bg-emerald opacity-20" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
+        <!-- Violet Circle -->
+        <div class="absolute bottom-20 right-1/4 w-40 h-40 bg-violet rounded-full opacity-10"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-cream/80 backdrop-blur-md border-b-2 border-slate-200">
+        <div class="max-w-6xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="#" class="flex items-center gap-2 group">
+                    <div class="w-10 h-10 bg-violet rounded-xl border-2 border-slate-800 shadow-pop flex items-center justify-center group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 group-hover:shadow-pop-hover transition-all duration-300">
+                        <span class="text-white font-heading font-bold text-xl">F</span>
+                    </div>
+                    <span class="font-heading font-bold text-2xl">FusionFun</span>
+                </a>
+                
+                <!-- Nav Links -->
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#vision" class="font-medium hover:text-violet transition-colors">愿景</a>
+                    <a href="#features" class="font-medium hover:text-violet transition-colors">功能</a>
+                    <a href="#agents" class="font-medium hover:text-violet transition-colors">Agent</a>
+                    <a href="#roadmap" class="font-medium hover:text-violet transition-colors">路线图</a>
+                </div>
+                
+                <!-- CTA Button -->
+                <a href="#cta" class="bg-violet text-white font-heading font-bold px-6 py-3 rounded-full border-2 border-slate-800 shadow-pop hover:-translate-x-1 hover:-translate-y-1 hover:shadow-pop-hover active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all duration-300">
+                    立即体验
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative py-24 lg:py-32">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Left: Text Content -->
+                <div class="relative z-10">
+                    <!-- Decorative Yellow Circle Behind Text -->
+                    <div class="absolute -top-10 -left-10 w-72 h-72 bg-amber rounded-full opacity-30 -z-10"></div>
+                    
+                    <!-- Badge -->
+                    <div class="inline-flex items-center gap-2 bg-violet/10 text-violet px-4 py-2 rounded-full border-2 border-violet/30 font-medium text-sm mb-6">
+                        <span class="w-2 h-2 bg-pink rounded-full animate-pulse"></span>
+                        AI Native Game Engine
+                    </div>
+                    
+                    <!-- Heading -->
+                    <h1 class="font-heading font-extrabold text-5xl lg:text-7xl leading-tight mb-6">
+                        定义 AI 时代
+                        <span class="relative inline-block">
+                            <span class="relative z-10">做游戏</span>
+                            <!-- Squiggle Underline -->
+                            <svg class="absolute -bottom-2 left-0 w-full h-3 text-pink" viewBox="0 0 200 12" preserveAspectRatio="none">
+                                <path d="M0 6 Q25 0 50 6 T100 6 T150 6 T200 6" stroke="currentColor" stroke-width="4" fill="none"/>
+                            </svg>
+                        </span>
+                        的方式
+                    </h1>
+                    
+                    <!-- Subtitle -->
+                    <p class="text-lg lg:text-xl text-slate-500 mb-8 leading-relaxed">
+                        FusionFun 是专为 Agent 设计的游戏智能协作平台，让 AI 从辅助工具进化为拥有独立思考能力的"虚拟开发者"
+                    </p>
+                    
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-wrap gap-4">
+                        <a href="#cta" class="inline-flex items-center gap-2 bg-violet text-white font-heading font-bold px-8 py-4 rounded-full border-2 border-slate-800 shadow-pop hover:-translate-x-1 hover:-translate-y-1 hover:shadow-pop-hover active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all duration-300">
+                            开始创作
+                            <span class="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </span>
+                        </a>
+                        <a href="#features" class="inline-flex items-center gap-2 bg-transparent text-slate-800 font-heading font-bold px-8 py-4 rounded-full border-2 border-slate-800 hover:bg-amber transition-all duration-300">
+                            了解更多
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Right: Hero Image/Illustration -->
+                <div class="relative">
+                    <!-- Dot Pattern Background -->
+                    <div class="absolute inset-0 dot-pattern opacity-50"></div>
+                    
+                    <!-- Agent Cards Stack -->
+                    <div class="relative grid grid-cols-2 gap-4">
+                        <!-- Designer Agent -->
+                        <div class="group bg-white p-4 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-rotate-2 hover:shadow-pop-violet hover:-translate-y-1 transition-all duration-300">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-2 border-slate-800">
+                                <img src="agent-designer.png" alt="策划Agent" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="font-heading font-bold text-center">策划 Agent</h3>
+                            <p class="text-sm text-slate-500 text-center">游戏设计专家</p>
+                        </div>
+                        
+                        <!-- Artist Agent -->
+                        <div class="group bg-white p-4 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:rotate-2 hover:shadow-pop-pink hover:-translate-y-1 transition-all duration-300 mt-8">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-2 border-slate-800">
+                                <img src="agent-artist.png" alt="美术Agent" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="font-heading font-bold text-center">美术 Agent</h3>
+                            <p class="text-sm text-slate-500 text-center">视觉创作大师</p>
+                        </div>
+                        
+                        <!-- Programmer Agent -->
+                        <div class="group bg-white p-4 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-rotate-1 hover:shadow-pop-violet hover:-translate-y-1 transition-all duration-300">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-2 border-slate-800">
+                                <img src="agent-programmer.png" alt="程序Agent" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="font-heading font-bold text-center">程序 Agent</h3>
+                            <p class="text-sm text-slate-500 text-center">代码构建者</p>
+                        </div>
+                        
+                        <!-- Tester Agent -->
+                        <div class="group bg-white p-4 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:rotate-1 hover:shadow-pop-pink hover:-translate-y-1 transition-all duration-300 mt-8">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-2 border-slate-800">
+                                <img src="agent-tester.png" alt="测试Agent" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="font-heading font-bold text-center">测试 Agent</h3>
+                            <p class="text-sm text-slate-500 text-center">质量守护者</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Decorative Elements -->
+                    <div class="absolute -top-4 -right-4 w-8 h-8 bg-pink rounded-full border-2 border-slate-800 animate-float"></div>
+                    <div class="absolute -bottom-4 -left-4 w-6 h-6 bg-amber rotate-45 border-2 border-slate-800"></div>
+                    <div class="absolute top-1/2 -right-8 w-4 h-4 bg-emerald rounded-full border-2 border-slate-800"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vision Section -->
+    <section id="vision" class="py-24 relative">
+        <!-- Squiggle Divider -->
+        <div class="absolute top-0 left-0 right-0 h-4 squiggle opacity-30"></div>
+        
+        <div class="max-w-6xl mx-auto px-6">
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <span class="inline-flex items-center gap-2 bg-emerald/10 text-slate-800 px-4 py-2 rounded-full border-2 border-emerald/30 font-medium text-sm mb-4">
+                    ✨ Vision
+                </span>
+                <h2 class="font-heading font-bold text-4xl lg:text-5xl mb-4">我们要构建怎样的未来？</h2>
+                <p class="text-lg text-slate-500 max-w-2xl mx-auto">打造一个模块化、可组合且永续进化的游戏创作生态</p>
+            </div>
+            
+            <!-- Vision Cards -->
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- For Humans -->
+                <div class="group bg-white p-8 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-rotate-1 hover:shadow-pop-violet hover:-translate-y-2 transition-all duration-300 relative overflow-hidden">
+                    <!-- Icon Circle -->
+                    <div class="absolute -top-4 -right-4 w-20 h-20 bg-violet rounded-full border-2 border-slate-800 flex items-center justify-center">
+                        <span class="text-3xl">👤</span>
+                    </div>
+                    <div class="pt-8">
+                        <h3 class="font-heading font-bold text-2xl mb-3">对于人类</h3>
+                        <p class="text-slate-500 leading-relaxed">0 门槛创作游戏，与 Agent 协作，赋予 Agent 品味与创造力</p>
+                    </div>
+                </div>
+                
+                <!-- For AI Agents -->
+                <div class="group bg-white p-8 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:rotate-1 hover:shadow-pop-pink hover:-translate-y-2 transition-all duration-300 relative overflow-hidden">
+                    <div class="absolute -top-4 -right-4 w-20 h-20 bg-pink rounded-full border-2 border-slate-800 flex items-center justify-center">
+                        <span class="text-3xl">🤖</span>
+                    </div>
+                    <div class="pt-8">
+                        <h3 class="font-heading font-bold text-2xl mb-3">对于 AI Agent</h3>
+                        <p class="text-slate-500 leading-relaxed">挖掘 Agent 做游戏、玩游戏的潜力，让 Agent 也能娱乐</p>
+                    </div>
+                </div>
+                
+                <!-- For Industry -->
+                <div class="group bg-white p-8 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-rotate-1 hover:shadow-pop-soft hover:-translate-y-2 transition-all duration-300 relative overflow-hidden">
+                    <div class="absolute -top-4 -right-4 w-20 h-20 bg-amber rounded-full border-2 border-slate-800 flex items-center justify-center">
+                        <span class="text-3xl">🎮</span>
+                    </div>
+                    <div class="pt-8">
+                        <h3 class="font-heading font-bold text-2xl mb-3">对于行业</h3>
+                        <p class="text-slate-500 leading-relaxed">解决游戏制作全链条问题，从玩法设计到测试反馈</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problems Section -->
+    <section class="py-24 bg-slate-800 text-white relative overflow-hidden">
+        <!-- Decorative Shapes -->
+        <div class="absolute inset-0 pointer-events-none">
+            <div class="absolute top-10 left-10 w-32 h-32 border-4 border-violet/20 rounded-full"></div>
+            <div class="absolute bottom-10 right-10 w-24 h-24 border-4 border-pink/20 rotate-45"></div>
+            <div class="absolute top-1/2 left-1/4 w-4 h-4 bg-amber rounded-full"></div>
+        </div>
+        
+        <div class="max-w-6xl mx-auto px-6 relative z-10">
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <span class="inline-flex items-center gap-2 bg-white/10 text-white px-4 py-2 rounded-full border-2 border-white/20 font-medium text-sm mb-4">
+                    😤 Problem
+                </span>
+                <h2 class="font-heading font-bold text-4xl lg:text-5xl mb-4">市场痛点</h2>
+                <p class="text-lg text-slate-100 max-w-2xl mx-auto">传统游戏开发面临的三重困境</p>
+            </div>
+            
+            <!-- Problem Cards -->
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white/5 p-8 rounded-2xl border-2 border-white/10 backdrop-blur-sm">
+                    <div class="w-16 h-16 bg-pink/20 rounded-2xl flex items-center justify-center mb-6">
+                        <span class="text-3xl">⚙️</span>
+                    </div>
+                    <h3 class="font-heading font-bold text-xl mb-4">传统引擎困境</h3>
+                    <ul class="space-y-3 text-slate-100">
+                        <li class="flex items-start gap-2">
+                            <span class="text-pink">✗</span>
+                            Unity/Unreal 门槛高，依赖大量专业人力
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-pink">✗</span>
+                            现有 AI 工具仅是散点辅助
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-pink">✗</span>
+                            无法完成全流程闭环
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white/5 p-8 rounded-2xl border-2 border-white/10 backdrop-blur-sm">
+                    <div class="w-16 h-16 bg-amber/20 rounded-2xl flex items-center justify-center mb-6">
+                        <span class="text-3xl">🎨</span>
+                    </div>
+                    <h3 class="font-heading font-bold text-xl mb-4">AIGC 能力缺失</h3>
+                    <ul class="space-y-3 text-slate-100">
+                        <li class="flex items-start gap-2">
+                            <span class="text-pink">✗</span>
+                            解决了"怎么实现"，未解决"怎么设计"
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-pink">✗</span>
+                            能力碎片化：素材生成 ≠ 做游戏
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-pink">✗</span>
+                            做出的游戏在可玩性上缺陷严重
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white/5 p-8 rounded-2xl border-2 border-white/10 backdrop-blur-sm">
+                    <div class="w-16 h-16 bg-emerald/20 rounded-2xl flex items-center justify-center mb-6">
+                        <span class="text-3xl">💡</span>
+                    </div>
+                    <h3 class="font-heading font-bold text-xl mb-4">机会窗口</h3>
+                    <p class="text-slate-100 leading-relaxed">AI Agent 爆发，从单体智能走向多智能体协作演进，市场急需调度 AI 军团的操作引擎</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-24 relative">
+        <div class="max-w-6xl mx-auto px-6">
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <span class="inline-flex items-center gap-2 bg-violet/10 text-slate-800 px-4 py-2 rounded-full border-2 border-violet/30 font-medium text-sm mb-4">
+                    💡 Solution
+                </span>
+                <h2 class="font-heading font-bold text-4xl lg:text-5xl mb-4">FusionFun 解决方案</h2>
+                <p class="text-lg text-slate-500 max-w-2xl mx-auto">专为 Agent 设计的游戏智能协作平台</p>
+            </div>
+            
+            <!-- Solution Flow -->
+            <div class="flex flex-wrap justify-center items-center gap-4 mb-16 p-8 bg-slate-100 rounded-2xl border-2 border-slate-200">
+                <div class="flex items-center gap-2 bg-violet text-white px-4 py-2 rounded-full border-2 border-slate-800 font-heading font-bold">
+                    <span class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-sm">1</span>
+                    策划
+                </div>
+                <svg class="w-6 h-6 text-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <div class="flex items-center gap-2 bg-pink text-white px-4 py-2 rounded-full border-2 border-slate-800 font-heading font-bold">
+                    <span class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-sm">2</span>
+                    美术
+                </div>
+                <svg class="w-6 h-6 text-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <div class="flex items-center gap-2 bg-amber text-slate-800 px-4 py-2 rounded-full border-2 border-slate-800 font-heading font-bold">
+                    <span class="w-6 h-6 bg-white/30 rounded-full flex items-center justify-center text-sm">3</span>
+                    程序
+                </div>
+                <svg class="w-6 h-6 text-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <div class="flex items-center gap-2 bg-emerald text-white px-4 py-2 rounded-full border-2 border-slate-800 font-heading font-bold">
+                    <span class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-sm">4</span>
+                    测试
+                </div>
+                <svg class="w-6 h-6 text-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <div class="flex items-center gap-2 bg-violet text-white px-4 py-2 rounded-full border-2 border-slate-800 font-heading font-bold">
+                    <span class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-sm">5</span>
+                    部署
+                </div>
+            </div>
+            
+            <!-- Feature Cards -->
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Natural Language -->
+                <div class="group bg-white p-8 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-translate-y-2 hover:shadow-pop-violet transition-all duration-300">
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 bg-violet rounded-xl border-2 border-slate-800 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl">💬</span>
+                        </div>
+                        <div>
+                            <h3 class="font-heading font-bold text-xl mb-2">自然语言交互</h3>
+                            <p class="text-slate-500 mb-4">门槛降低到语言交互，用对话的方式做游戏或玩游戏</p>
+                            <ul class="space-y-2 text-sm text-slate-500">
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    无需专业编程知识
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    意图自动理解与转化
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    实时反馈与迭代
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Human-AI Collaboration -->
+                <div class="group bg-white p-8 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-translate-y-2 hover:shadow-pop-pink transition-all duration-300">
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 bg-pink rounded-xl border-2 border-slate-800 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl">🤝</span>
+                        </div>
+                        <div>
+                            <h3 class="font-heading font-bold text-xl mb-2">人机协作共创</h3>
+                            <p class="text-slate-500 mb-4">人类是反馈者（品位把控者），机器提供建造"奇观"的执行力</p>
+                            <ul class="space-y-2 text-sm text-slate-500">
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    人类定义方向与品味
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    Agent 执行与实现
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    协作产出超越单方能力
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Agent Gaming -->
+                <div class="group bg-white p-8 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-translate-y-2 hover:shadow-pop-soft transition-all duration-300">
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 bg-amber rounded-xl border-2 border-slate-800 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl">🎮</span>
+                        </div>
+                        <div>
+                            <h3 class="font-heading font-bold text-xl mb-2">Agent 玩游戏基础设施</h3>
+                            <p class="text-slate-500 mb-4">Agent 能上手体验游戏，并从玩家视角获得体验反馈</p>
+                            <ul class="space-y-2 text-sm text-slate-500">
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    视觉观察：Agent 像人类一样"看"游戏画面
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    操作与交互：通过 API 模拟玩家行为
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    情感计算：模拟玩家情绪
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Game Engine Core -->
+                <div class="group bg-white p-8 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-translate-y-2 hover:shadow-pop-violet transition-all duration-300">
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 bg-emerald rounded-xl border-2 border-slate-800 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl">🔧</span>
+                        </div>
+                        <div>
+                            <h3 class="font-heading font-bold text-xl mb-2">游戏引擎核心</h3>
+                            <p class="text-slate-500 mb-4">专为 AI 快速原型制作和协同的游戏引擎，对 AI Agent 友好</p>
+                            <ul class="space-y-2 text-sm text-slate-500">
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    简洁、强大、语义清晰的 API
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    无复杂的人类操作 UI 界面
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-emerald/20 rounded-full flex items-center justify-center text-emerald">→</span>
+                                    易于调试，支持 Agent 进化
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Agents Section -->
+    <section id="agents" class="py-24 bg-slate-100 relative overflow-hidden">
+        <!-- Decorative Dots -->
+        <div class="absolute inset-0 dot-pattern opacity-30"></div>
+        
+        <div class="max-w-6xl mx-auto px-6 relative z-10">
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <span class="inline-flex items-center gap-2 bg-pink/10 text-slate-800 px-4 py-2 rounded-full border-2 border-pink/30 font-medium text-sm mb-4">
+                    🤖 Agents
+                </span>
+                <h2 class="font-heading font-bold text-4xl lg:text-5xl mb-4">你的 AI 开发团队</h2>
+                <p class="text-lg text-slate-500 max-w-2xl mx-auto">四个专业 Agent，覆盖游戏开发全流程</p>
+            </div>
+            
+            <!-- Agent Cards -->
+            <div class="grid md:grid-cols-4 gap-6">
+                <!-- Designer -->
+                <div class="group bg-white p-6 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-translate-y-3 hover:shadow-pop-violet transition-all duration-300 text-center">
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-slate-800 rotate-3 group-hover:rotate-0 transition-transform">
+                        <img src="agent-designer.png" alt="策划Agent" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-heading font-bold text-lg mb-1">策划 Agent</h3>
+                    <p class="text-sm text-slate-500 mb-3">游戏设计专家</p>
+                    <div class="flex flex-wrap gap-1 justify-center">
+                        <span class="text-xs bg-violet/10 text-violet px-2 py-1 rounded-full">玩法设计</span>
+                        <span class="text-xs bg-violet/10 text-violet px-2 py-1 rounded-full">数值平衡</span>
+                    </div>
+                </div>
+                
+                <!-- Artist -->
+                <div class="group bg-white p-6 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-translate-y-3 hover:shadow-pop-pink transition-all duration-300 text-center">
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-slate-800 -rotate-2 group-hover:rotate-0 transition-transform">
+                        <img src="agent-artist.png" alt="美术Agent" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-heading font-bold text-lg mb-1">美术 Agent</h3>
+                    <p class="text-sm text-slate-500 mb-3">视觉创作大师</p>
+                    <div class="flex flex-wrap gap-1 justify-center">
+                        <span class="text-xs bg-pink/10 text-pink px-2 py-1 rounded-full">角色设计</span>
+                        <span class="text-xs bg-pink/10 text-pink px-2 py-1 rounded-full">场景绘制</span>
+                    </div>
+                </div>
+                
+                <!-- Programmer -->
+                <div class="group bg-white p-6 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-translate-y-3 hover:shadow-pop-soft transition-all duration-300 text-center">
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-slate-800 rotate-1 group-hover:rotate-0 transition-transform">
+                        <img src="agent-programmer.png" alt="程序Agent" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-heading font-bold text-lg mb-1">程序 Agent</h3>
+                    <p class="text-sm text-slate-500 mb-3">代码构建者</p>
+                    <div class="flex flex-wrap gap-1 justify-center">
+                        <span class="text-xs bg-amber/10 text-amber px-2 py-1 rounded-full">逻辑实现</span>
+                        <span class="text-xs bg-amber/10 text-amber px-2 py-1 rounded-full">性能优化</span>
+                    </div>
+                </div>
+                
+                <!-- Tester -->
+                <div class="group bg-white p-6 rounded-2xl border-2 border-slate-800 shadow-pop-soft hover:-translate-y-3 hover:shadow-pop-violet transition-all duration-300 text-center">
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-slate-800 -rotate-3 group-hover:rotate-0 transition-transform">
+                        <img src="agent-tester.png" alt="测试Agent" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-heading font-bold text-lg mb-1">测试 Agent</h3>
+                    <p class="text-sm text-slate-500 mb-3">质量守护者</p>
+                    <div class="flex flex-wrap gap-1 justify-center">
+                        <span class="text-xs bg-emerald/10 text-emerald px-2 py-1 rounded-full">自动化测试</span>
+                        <span class="text-xs bg-emerald/10 text-emerald px-2 py-1 rounded-full">体验反馈</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Roadmap Section -->
+    <section id="roadmap" class="py-24 relative">
+        <div class="max-w-4xl mx-auto px-6">
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <span class="inline-flex items-center gap-2 bg-amber/10 text-slate-800 px-4 py-2 rounded-full border-2 border-amber/30 font-medium text-sm mb-4">
+                    🚀 Roadmap
+                </span>
+                <h2 class="font-heading font-bold text-4xl lg:text-5xl mb-4">长期路线图</h2>
+                <p class="text-lg text-slate-500">引擎闭环与创作者生态</p>
+            </div>
+            
+            <!-- Timeline -->
+            <div class="relative">
+                <!-- Vertical Line -->
+                <div class="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-violet via-pink to-amber rounded-full"></div>
+                
+                <!-- Timeline Items -->
+                <div class="space-y-12">
+                    <!-- Item 1 -->
+                    <div class="flex gap-6 items-start">
+                        <div class="w-16 h-16 bg-violet rounded-full border-4 border-slate-800 flex items-center justify-center text-2xl flex-shrink-0 shadow-pop">
+                            🛠️
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border-2 border-slate-800 shadow-pop-soft flex-1">
+                            <h3 class="font-heading font-bold text-xl mb-2">工具完善</h3>
+                            <p class="text-slate-500">Agent 玩游戏工具和引擎核心可被独立使用，大幅加快 Agent 进化速度</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 2 -->
+                    <div class="flex gap-6 items-start">
+                        <div class="w-16 h-16 bg-pink rounded-full border-4 border-slate-800 flex items-center justify-center text-2xl flex-shrink-0 shadow-pop">
+                            ⚙️
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border-2 border-slate-800 shadow-pop-soft flex-1">
+                            <h3 class="font-heading font-bold text-xl mb-2">全流程自动化闭环</h3>
+                            <p class="text-slate-500">跑通"自然语言 → 策划拆解 → 资产制作 → 程序整合 → 测试反馈 → 可玩游戏"的工业流水线</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 3 -->
+                    <div class="flex gap-6 items-start">
+                        <div class="w-16 h-16 bg-amber rounded-full border-4 border-slate-800 flex items-center justify-center text-2xl flex-shrink-0 shadow-pop">
+                            🎯
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border-2 border-slate-800 shadow-pop-soft flex-1">
+                            <h3 class="font-heading font-bold text-xl mb-2">Agent 玩游戏 & 生态开放</h3>
+                            <p class="text-slate-500">基于人类反馈的 Agent 训练；上线"FusionFun Agent"商店，允许第三方创作者训练并上传专属垂类 Agent</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 4 -->
+                    <div class="flex gap-6 items-start">
+                        <div class="w-16 h-16 bg-emerald rounded-full border-4 border-slate-800 flex items-center justify-center text-2xl flex-shrink-0 shadow-pop">
+                            🌍
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border-2 border-slate-800 shadow-pop-soft flex-1">
+                            <h3 class="font-heading font-bold text-xl mb-2">从 2D 迈向 3D</h3>
+                            <p class="text-slate-500">引擎核心支持 3D 游戏，迈向 3D 游戏，甚至 3A 游戏的制作</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="cta" class="py-24 bg-violet relative overflow-hidden">
+        <!-- Decorative Elements -->
+        <div class="absolute inset-0 pointer-events-none">
+            <div class="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full"></div>
+            <div class="absolute bottom-10 right-10 w-48 h-48 bg-pink/20 rounded-full"></div>
+            <div class="absolute top-1/2 left-1/4 w-8 h-8 bg-amber rotate-45"></div>
+            <div class="absolute bottom-1/3 right-1/3 w-6 h-6 bg-white/20 rounded-full"></div>
+        </div>
+        
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <h2 class="font-heading font-bold text-4xl lg:text-5xl text-white mb-6">定义 AI 时代创作游戏的方式</h2>
+            <p class="text-xl text-white/80 mb-10">携手共建永续进化的游戏创作生态</p>
+            
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#" class="inline-flex items-center gap-2 bg-white text-violet font-heading font-bold px-8 py-4 rounded-full border-2 border-slate-800 shadow-pop hover:-translate-x-1 hover:-translate-y-1 hover:shadow-pop-hover active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all duration-300">
+                    加入我们
+                    <span class="w-6 h-6 bg-violet rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
+                <a href="#" class="inline-flex items-center gap-2 bg-transparent text-white font-heading font-bold px-8 py-4 rounded-full border-2 border-white hover:bg-white/10 transition-all duration-300">
+                    查看文档
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 bg-slate-800 text-white">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <!-- Logo -->
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 bg-violet rounded-xl border-2 border-white/30 flex items-center justify-center">
+                        <span class="text-white font-heading font-bold text-xl">F</span>
+                    </div>
+                    <span class="font-heading font-bold text-2xl">FusionFun</span>
+                </div>
+                
+                <!-- Links -->
+                <div class="flex gap-8">
+                    <a href="#vision" class="text-white/60 hover:text-white transition-colors">愿景</a>
+                    <a href="#features" class="text-white/60 hover:text-white transition-colors">功能</a>
+                    <a href="#agents" class="text-white/60 hover:text-white transition-colors">Agent</a>
+                    <a href="#roadmap" class="text-white/60 hover:text-white transition-colors">路线图</a>
+                </div>
+            </div>
+            
+            <!-- Copyright -->
+            <div class="mt-8 pt-8 border-t border-white/10 text-center text-white/40">
+                <p>© 2026 FusionFun. 打造永续进化的游戏创作生态</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Smooth Scroll Script -->
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
